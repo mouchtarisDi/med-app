@@ -1,0 +1,25 @@
+# Environment Variables
+.env
+.env.local
+
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+env/
+venv/
+ENV/
+
+# Node / React
+node_modules/
+/frontend/build
+/frontend/dist
+.npm
+
+# Docker & IDEs
+.idea/
+.vscode/
+*.swp
+*.logs
