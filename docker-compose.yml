@@ -45,7 +45,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://localhost:8000/api/v1
+      - AUTH_PROXY_TARGET=http://backend:8000
     depends_on:
       - backend
 

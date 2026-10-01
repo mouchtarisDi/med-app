@@ -1,10 +1,8 @@
-import React from 'react';
-
 export default function App() {
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
+    <main className="foundation-screen">
       <h1>Medical Practice Management System</h1>
-      <p>Το Frontend λειτουργεί κανονικά!</p>
-    </div>
+      <p>Frontend foundation is ready.</p>
+    </main>
   );
 }
