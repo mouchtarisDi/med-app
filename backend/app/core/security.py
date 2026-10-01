@@ -1,7 +1,7 @@
 # Security utilities for password hashing and token generation
 
 from datetime import datetime, timedelta, timezone
-from jose import jwt
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 
 from app.core.config import settings
@@ -30,3 +30,36 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
         algorithm=settings.JWT_ALGORITHM,
     )
     return encoded_jwt
+
+
+def decode_access_token_user_id(token: str) -> int:
+    """Validate an access token and return its positive PostgreSQL Integer ID."""
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+            options={"require_exp": True, "require_sub": True},
+        )
+    except (TypeError, ValueError, OverflowError) as exc:
+        # Malformed claim types must also follow the JWTError contract.
+        raise JWTError("Invalid token claims") from exc
+
+    expiration = payload["exp"]
+    if isinstance(expiration, bool) or not isinstance(expiration, (int, float)):
+        raise JWTError("Invalid expiration")
+
+    subject = payload["sub"]
+    if (
+        not isinstance(subject, str)
+        or not 1 <= len(subject) <= 10
+        or not subject.isascii()
+        or not subject.isdecimal()
+        or subject.startswith("0")
+    ):
+        raise JWTError("Invalid user ID")
+
+    user_id = int(subject)
+    if user_id > 2147483647:
+        raise JWTError("Invalid user ID")
+    return user_id

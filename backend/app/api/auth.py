@@ -1,8 +1,11 @@
 # Authentication API endpoints
 
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.db.models.user import User
 from app.schemas.user import UserCreate, UserOut
@@ -47,5 +50,12 @@ def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = create_access_token(data={"sub": user.email})
+    access_token = create_access_token(data={"sub": str(user.id)})
     return {"access_token": access_token, "token_type": "bearer"}
+
+
+@router.get("/me", response_model=UserOut)
+def read_current_user(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    return current_user
