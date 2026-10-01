@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "rootDir": "src",
+    "outDir": ".api-test-build"
+  },
+  "include": ["src/api/**/*.ts", "src/types/auth.ts"]
+}
