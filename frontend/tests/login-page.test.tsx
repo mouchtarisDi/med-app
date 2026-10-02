@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import App from '../src/App.js';
@@ -94,8 +94,9 @@ test('successful current user shows account details without token and logout cle
   const { container } = showApp();
   fillAndSubmit();
   const heading = await screen.findByRole('heading', { name: 'Dashboard' });
-  expect(screen.getByText(user.full_name)).toBeTruthy();
-  expect(screen.getByText(user.email)).toBeTruthy();
+  const sidebar = screen.getByRole('complementary', { name: 'Πλαϊνή μπάρα' });
+  expect(within(sidebar).getByText(user.full_name)).toBeTruthy();
+  expect(within(sidebar).getByText(user.email)).toBeTruthy();
   expect(container.innerHTML).not.toContain(token.access_token);
   expect(container.innerHTML).not.toContain(credentials.password);
   expect(document.activeElement).toBe(heading);
