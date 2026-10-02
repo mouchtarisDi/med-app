@@ -5,7 +5,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: 'jsdom',
-    include: ['tests/auth-provider.test.tsx', 'tests/login-page.test.tsx'],
+    include: ['tests/auth-provider.test.tsx', 'tests/login-page.test.tsx', 'tests/routing.test.tsx'],
     setupFiles: ['tests/setup-react.ts'],
   },
 });

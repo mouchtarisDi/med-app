@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, expect, test, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../src/App.js';
 import { AuthProvider } from '../src/auth/AuthProvider.js';
 import { login as apiLogin, getCurrentUser } from '../src/api/auth.js';
@@ -13,7 +14,7 @@ const token = { access_token: 'synthetic-private-token', token_type: 'bearer' as
 const user = { full_name: 'Δοκιμαστικός Χρήστης', email: credentials.email, id: 42 };
 
 function showApp() {
-  return render(<AuthProvider><App /></AuthProvider>);
+  return render(<AuthProvider><MemoryRouter initialEntries={['/login']}><App /></MemoryRouter></AuthProvider>);
 }
 
 function fillAndSubmit() {
@@ -55,11 +56,11 @@ test('credentials go through provider; pending current user keeps form busy and 
   expect((screen.getByLabelText('Email') as HTMLInputElement).disabled).toBe(true);
   expect((screen.getByLabelText('Κωδικός') as HTMLInputElement).disabled).toBe(true);
   expect(pendingButton.closest('form')?.getAttribute('aria-busy')).toBe('true');
-  expect(screen.queryByText('Συνδεθήκατε επιτυχώς.')).toBeNull();
+  expect(screen.queryByRole('heading', { name: 'Dashboard' })).toBeNull();
   fireEvent.click(pendingButton);
   expect(loginMock).toHaveBeenCalledTimes(1);
   await act(async () => { resolveMe(user); });
-  expect(screen.getByRole('heading', { name: 'Συνδεθήκατε επιτυχώς.' })).toBeTruthy();
+  expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeTruthy();
 });
 
 const generic = 'Δεν ήταν δυνατή η σύνδεση. Δοκιμάστε ξανά.';
@@ -92,14 +93,14 @@ test.each([
 test('successful current user shows account details without token and logout clears form', async () => {
   const { container } = showApp();
   fillAndSubmit();
-  const heading = await screen.findByRole('heading', { name: 'Συνδεθήκατε επιτυχώς.' });
+  const heading = await screen.findByRole('heading', { name: 'Dashboard' });
   expect(screen.getByText(user.full_name)).toBeTruthy();
   expect(screen.getByText(user.email)).toBeTruthy();
   expect(container.innerHTML).not.toContain(token.access_token);
   expect(container.innerHTML).not.toContain(credentials.password);
   expect(document.activeElement).toBe(heading);
   fireEvent.click(screen.getByRole('button', { name: 'Αποσύνδεση' }));
-  expect(screen.getByRole('heading', { name: 'Σύνδεση' })).toBeTruthy();
+  expect(await screen.findByRole('heading', { name: 'Σύνδεση' })).toBeTruthy();
   expect((screen.getByLabelText('Email') as HTMLInputElement).value).toBe('');
   expect((screen.getByLabelText('Κωδικός') as HTMLInputElement).value).toBe('');
 });
