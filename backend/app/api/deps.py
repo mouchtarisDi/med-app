@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Path
@@ -7,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.security import decode_access_token_user_id
+from app.core.permissions import Permission, get_permissions_for_roles
 from app.db.models import ClinicMembership, User
 from app.db.session import get_db
 
@@ -66,3 +68,16 @@ def get_current_clinic_membership(
             status_code=404, detail="Clinic not found or inaccessible"
         )
     return membership
+
+
+def require_permission(permission: Permission) -> Callable[..., ClinicMembership]:
+    """Require a permission within the membership resolved for this request."""
+    def authorize(
+        membership: Annotated[ClinicMembership, Depends(get_current_clinic_membership)],
+    ) -> ClinicMembership:
+        permissions = get_permissions_for_roles(role.role for role in membership.roles)
+        if permission not in permissions:
+            raise HTTPException(status_code=403, detail="Forbidden")
+        return membership
+
+    return authorize
