@@ -15,3 +15,4 @@ class Clinic(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     memberships = relationship("ClinicMembership", back_populates="clinic")
+    patients = relationship("Patient", back_populates="clinic", passive_deletes="all")
