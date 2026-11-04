@@ -68,3 +68,16 @@ class PatientRead(BaseModel):
     email: str | None
     created_at: datetime
     updated_at: datetime
+
+
+class PatientSummary(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+
+
+class PatientList(BaseModel):
+    items: list[PatientSummary]
+    total: int
+    limit: int
+    offset: int

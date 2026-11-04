@@ -4,6 +4,9 @@ from sqlalchemy import text
 from app.db.session import get_db
 from app.api.auth import router as auth_router
 from app.api.patients import router as patients_router
+from app.core.access_logging import configure_access_log_privacy
+
+configure_access_log_privacy()
 
 app = FastAPI(title="Medical Practice Management API")
 

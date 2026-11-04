@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn==0.52.4
 pydantic-settings
 sqlalchemy
 psycopg2-binary

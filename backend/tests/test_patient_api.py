@@ -280,9 +280,9 @@ def test_write_failure_rolls_back_and_remains_usable(client, data, db_session, m
     assert "sensitive-db" not in caplog.text
 
 
-def test_only_create_and_detail_are_registered():
+def test_only_approved_patient_routes_are_registered():
     routes = app.openapi()["paths"]
-    assert set(routes["/clinics/{clinic_id}/patients"]) == {"post"}
+    assert set(routes["/clinics/{clinic_id}/patients"]) == {"post", "get"}
     assert set(routes["/clinics/{clinic_id}/patients/{patient_id}"]) == {"get"}
 
 

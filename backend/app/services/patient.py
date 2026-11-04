@@ -1,11 +1,11 @@
 """Clinic-scoped Patient operations; callers pass an authorized membership."""
 
-from sqlalchemy import select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
 
 from app.db.models import ClinicMembership, Patient
-from app.schemas.patient import PatientCreate, PatientRead
+from app.schemas.patient import ASCII_WHITESPACE, PatientCreate, PatientList, PatientRead, PatientSummary
 
 
 class PatientError(Exception):
@@ -73,3 +73,27 @@ def get_patient(db: Session, membership: ClinicMembership, patient_id: int) -> P
     if patient is None:
         raise PatientError(404, "Patient not found or inaccessible")
     return PatientRead.model_validate(patient)
+
+
+def list_patients(
+    db: Session, membership: ClinicMembership, q: str | None, limit: int, offset: int,
+) -> PatientList:
+    predicates = [Patient.clinic_id == membership.clinic_id]
+    query = q.strip(ASCII_WHITESPACE) if q is not None else ""
+    if query:
+        escaped = query.replace("!", "!!").replace("%", "!%").replace("_", "!_")
+        pattern = "%" + escaped + "%"
+        predicates.append(or_(
+            Patient.first_name.ilike(pattern, escape="!"),
+            Patient.last_name.ilike(pattern, escape="!"),
+            Patient.phone.ilike(pattern, escape="!"),
+        ))
+    total = db.scalar(select(func.count()).select_from(Patient).where(*predicates))
+    # Select only summary columns, without loading sensitive fields/relationships.
+    rows = db.execute(select(Patient.id, Patient.first_name, Patient.last_name)
+                      .where(*predicates).order_by(Patient.id.asc()).limit(limit).offset(offset))
+    return PatientList(
+        items=[PatientSummary(id=row.id, first_name=row.first_name, last_name=row.last_name)
+               for row in rows],
+        total=total, limit=limit, offset=offset,
+    )

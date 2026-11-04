@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.routing import APIRoute
@@ -12,8 +12,8 @@ from app.api.deps import require_permission
 from app.core.permissions import Permission
 from app.db.models import ClinicMembership
 from app.db.session import get_db
-from app.schemas.patient import PatientCreate, PatientRead
-from app.services.patient import PatientError, create_patient, get_patient
+from app.schemas.patient import PatientCreate, PatientList, PatientRead
+from app.services.patient import PatientError, create_patient, get_patient, list_patients
 
 
 class PatientRoute(APIRoute):
@@ -24,7 +24,7 @@ class PatientRoute(APIRoute):
             try:
                 return await original(request)
             except RequestValidationError:
-                # Covers malformed JSON, body and path errors without reflecting
+                # Covers malformed JSON, body, path and query errors without reflecting
                 # input, ctx, arbitrary field names or exception formatting.
                 return JSONResponse(status_code=422, content={"detail": [{
                     "loc": ["request"], "type": "invalid_patient_request",
@@ -61,3 +61,14 @@ def read_patient(
     db: Annotated[Session, Depends(get_db)],
 ) -> PatientRead:
     return get_patient(db, membership, patient_id)
+
+
+@router.get("", response_model=PatientList)
+def read_patients(
+    membership: Annotated[ClinicMembership, Depends(require_permission(Permission.PATIENTS_READ))],
+    db: Annotated[Session, Depends(get_db)],
+    q: Annotated[str | None, Query(max_length=100)] = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 20,
+    offset: Annotated[int, Query(ge=0, le=2147483647)] = 0,
+) -> PatientList:
+    return list_patients(db, membership, q, limit, offset)
