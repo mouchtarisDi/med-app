@@ -3,11 +3,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from app.db.session import get_db
 from app.api.auth import router as auth_router
+from app.api.patients import router as patients_router
 
 app = FastAPI(title="Medical Practice Management API")
 
 # Include routing module for authentication endpoints
 app.include_router(auth_router)
+app.include_router(patients_router)
 
 @app.get("/")
 def read_root():
